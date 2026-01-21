@@ -19,7 +19,7 @@ jobs:
         run: |
           mkdir -p release-assets
           if [ -d "bin" ]; then
-            for binary in bin/rustybase-*; do
+            for binary in bin/rustybase*; do
               if [ -f "$binary" ]; then
                 filename=$(basename "$binary")
                 cp "$binary" "release-assets/$filename"
@@ -29,7 +29,7 @@ jobs:
             done
           else
             echo "Warning: bin/ directory not found"
-          done
+          fi
           
           if [ ! "$(ls -A release-assets)" ]; then
             echo "Error: No binaries found in bin/ directory"
