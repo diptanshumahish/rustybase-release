@@ -66,8 +66,28 @@ check_rust() {
         return 0
     else
         echo -e "${RED}✗ Rust is not installed${NC}"
-        echo -e "${YELLOW}Please install Rust from: https://rustup.rs/${NC}"
-        exit 1
+        echo -e -n "${YELLOW}Would you like to install Rust now? (y/n) ${NC}"
+        read choice
+        if [[ "$choice" =~ ^[Yy]$ ]]; then
+            echo -e "${BLUE}Installing Rust...${NC}"
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+            
+            if [ -f "$HOME/.cargo/env" ]; then
+                source "$HOME/.cargo/env"
+            fi
+            
+            if check_command rustc && check_command cargo; then
+                RUST_VERSION=$(rustc --version)
+                echo -e "${GREEN}✓ Rust installed successfully: $RUST_VERSION${NC}"
+                return 0
+            else
+                echo -e "${RED}✗ Rust installation failed or PATH not updated. Please restart your terminal or run 'source \$HOME/.cargo/env'.${NC}"
+                exit 1
+            fi
+        else
+            echo -e "${YELLOW}Please install Rust from: https://rustup.rs/${NC}"
+            exit 1
+        fi
     fi
 }
 
