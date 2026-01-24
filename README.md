@@ -1,31 +1,81 @@
 # RustyBase
 
-Proprietary MongoDB-like database server built for performance and simplicity.
+<div align="center">
 
-## 🚀 Quick Install (One-Liner)
+```text
+░█████████                           ░██               ░██
+░██     ░██                          ░██               ░██
+░██     ░██ ░██    ░██  ░███████  ░████████ ░██    ░██ ░████████   ░██████    ░███████   ░███████
+░█████████  ░██    ░██ ░██           ░██    ░██    ░██ ░██    ░██       ░██  ░██        ░██    ░██
+░██   ░██   ░██    ░██  ░███████     ░██    ░██    ░██ ░██    ░██  ░███████   ░███████  ░█████████
+░██    ░██  ░██   ░███        ░██    ░██    ░██   ░███ ░███   ░██ ░██   ░██         ░██ ░██
+░██     ░██  ░█████░██  ░███████      ░████  ░█████░██ ░██░█████   ░█████░██  ░███████   ░███████
+                                                   ░██
+                                             ░███████
+```
+
+**High-performance, proprietary MongoDB-compatible database engine built for speed, reliability, and simplicity.**
+
+[![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
+[![OS](https://img.shields.io/badge/OS-macOS%20|%20Linux%20|%20Windows-brightgreen.svg)]()
+[![Platform](https://img.shields.io/badge/architecture-x86__64%20|%20arm64-orange.svg)]()
+
+[Features](#key-features) • [Installation](#quick-install) • [Quick Start](#quick-start) • [Ecosystem](#ecosystem)
+
+</div>
+
+---
+
+## Key Features
+
+- **Blazing Fast**: Optimized storage engine written in Rust for minimal latency.
+- **MongoDB Compatible**: Full support for MongoDB's query language and BSON format.
+- **Reliable & Robust**: ACID-compliant transactions with Write-Ahead Logging (WAL).
+- **Zero Dependency**: Standalone binary with no external runtimes required.
+- **Standard SDKs**: First-class support for TypeScript/JavaScript and more.
+
+## Quick Install
+
+Get up and running in seconds using our automated installation scripts.
 
 ### Unix (macOS & Linux)
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/diptanshumahish/rustybase-release/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/diptanshumahish/rustybase-release/master/install.sh | bash
 ```
 
 ### Windows (PowerShell)
+
 ```powershell
 irm https://raw.githubusercontent.com/diptanshumahish/rustybase-release/main/install.ps1 | iex
 ```
 
-## 📦 Releases
+> [!TIP]
+> Manual binaries for all supported platforms are available in the [Releases](https://github.com/diptanshumahish/rustybase-release/releases) section.
 
-Binaries for macOS (Intel & Apple Silicon), Linux, and Windows are available in the [Releases](https://github.com/diptanshumahish/rustybase-release/releases) section.
+## Quick Start
 
-## Usage
-
-After installation, invoke the RustyBase engine:
+Once installed, setting up your database is as simple as two commands:
 
 ```bash
-# Step 1: Initialize Instance
+# 1. Initialize your local instance
 rustybase init
 
-# Step 2: Start Server
+# 2. Start the database engine
 rustybase serve
 ```
+
+The server will start on `localhost:8080` (default) and is ready to accept connections.
+
+## Ecosystem
+
+RustyBase is more than just a server. Explore our growing list of tools:
+
+- **[RustyBase SDK](https://github.com/diptanshumahish/rustybase-sdk)**: Modern TypeScript/JavaScript SDK for seamless integration.
+- **[RustyBase Web UI](https://github.com/diptanshumahish/rustybase-admin)**: A beautiful administrative dashboard to manage your data visually.
+
+---
+
+<div align="center">
+Built with ❤️ by [Diptanshu Mahish](https://github.com/diptanshumahish)
+</div>
