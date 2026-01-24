@@ -1,39 +1,31 @@
 # RustyBase
 
-Proprietary MongoDB-like database server.
+Proprietary MongoDB-like database server built for performance and simplicity.
 
-## Installation
+## 🚀 Quick Install (One-Liner)
 
-### Option 1: Using install script
+### Unix (macOS & Linux)
 ```bash
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/diptanshumahish/rustybase-release/main/install.sh | bash
 ```
 
-### Option 2: Manual installation
-```bash
-# Copy binary to your PATH
-sudo cp bin/rustybase /usr/local/bin/
-sudo chmod +x /usr/local/bin/rustybase
+### Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/diptanshumahish/rustybase-release/main/install.ps1 | iex
 ```
+
+## 📦 Releases
+
+Binaries for macOS (Intel & Apple Silicon), Linux, and Windows are available in the [Releases](https://github.com/diptanshumahish/rustybase-release/releases) section.
 
 ## Usage
 
+After installation, invoke the RustyBase engine:
+
 ```bash
-# Initialize a new instance
+# Step 1: Initialize Instance
 rustybase init
 
-# Start the server
+# Step 2: Start Server
 rustybase serve
-
-# uninstall entirely
-rustybase --uninstall
 ```
-
-
-## License
-
-This is proprietary software. See LICENSE file for terms.
-
-## Support
-
-For licensing inquiries, contact: [your-email@example.com]
