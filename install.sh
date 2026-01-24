@@ -17,6 +17,10 @@ RED='\033[0;31m'
 WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
+# Temporary directory for installation assets
+TEMP_DIR=$(mktemp -d)
+trap "rm -rf $TEMP_DIR" EXIT
+
 # Spinner implementation
 show_spinner() {
     local pid=$1
