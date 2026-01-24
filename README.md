@@ -69,6 +69,7 @@ The server will start on `localhost:8080` (default) and is ready to accept conne
 RustyBase is more than just a server. Explore our growing list of tools:
 
 - **[RustyBase SDK](https://www.npmjs.com/package/rustybase-sdk)**: Modern TypeScript/JavaScript SDK for seamless integration.
+- **[RustyBase SDK](https://pypi.org/project/rustybase/)**: Python SDK for seamless integration.
 - **[RustyBase Web UI](https://github.com/diptanshumahish/rustybase-admin)**: A beautiful administrative dashboard to manage your data visually.
 
 ---
