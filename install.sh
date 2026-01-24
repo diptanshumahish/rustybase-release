@@ -58,10 +58,19 @@ TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
 
 echo -e "${CYAN}>> Pulling binary from production registry...${NC}"
-curl -L -o "$TEMP_DIR/rustybase" "$DOWNLOAD_URL" || {
-    echo -e "${RED}[x] Download failed. Please check your internet connection.${NC}"
+if ! curl --fail -L -o "$TEMP_DIR/rustybase" "$DOWNLOAD_URL"; then
+    echo -e "${RED}[x] Download failed. The binary for $TARGET could not be found in release $RELEASE_TAG.${NC}"
+    echo -e "${YELLOW}[!] This usually means the GitHub Action build for this version is still in progress or failed.${NC}"
+    echo -e "${YELLOW}[!] Check your build status here: $REPO_URL/actions${NC}"
     exit 1
-}
+fi
+
+# Verify the file is not a text error (like "Not Found")
+if grep -q "Not Found" "$TEMP_DIR/rustybase" || [ $(stat -c%s "$TEMP_DIR/rustybase" 2>/dev/null || stat -f%z "$TEMP_DIR/rustybase" 2>/dev/null) -lt 1000 ]; then
+    echo -e "${RED}[x] Downloaded file is invalid or too small.${NC}"
+    echo -e "${YELLOW}[!] It seems GitHub returned an error page instead of the binary.${NC}"
+    exit 1
+fi
 
 # Install binary
 INSTALL_DIR="/usr/local/bin"

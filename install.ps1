@@ -38,9 +38,15 @@ New-Item -ItemType Directory -Path $TempDir | Out-Null
 Write-Host ">> Pulling binary from production registry..." -ForegroundColor Cyan
 $DestPath = Join-Path $TempDir "rustybase.exe"
 try {
-    Invoke-WebRequest -Uri $DownloadUrl -OutFile $DestPath
+    $Response = Invoke-WebRequest -Uri $DownloadUrl -OutFile $DestPath -ErrorAction Stop
+    
+    # Verify file size (should be > 1MB)
+    $FileSize = (Get-Item $DestPath).Length
+    if ($FileSize -lt 1MB) {
+        throw "Downloaded file is too small ($FileSize bytes). This usually means an error page was downloaded instead of the binary."
+    }
 } catch {
-    Write-Error "[x] Download failed. Please check your internet connection."
+    Write-Error "[x] Download failed. The binary for $Target could not be found in release $ReleaseTag.`n[!] Check your GitHub Action build status: $RepoUrl/actions"
     exit 1
 }
 
