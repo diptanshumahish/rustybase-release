@@ -18,7 +18,17 @@ WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
 # Temporary directory for installation assets
-TEMP_DIR=$(mktemp -d)
+# Robust creation with fallback for restricted environments
+if ! TEMP_DIR=$(mktemp -d 2>/dev/null); then
+    TEMP_DIR="/tmp/rustybase-$(date +%s)-$RANDOM"
+    mkdir -p "$TEMP_DIR"
+fi
+
+if [ -z "$TEMP_DIR" ] || [ ! -d "$TEMP_DIR" ]; then
+    echo -e "${RED}[x] Error: Could not create temporary directory for installation.${NC}"
+    exit 1
+fi
+export TEMP_DIR
 trap "rm -rf $TEMP_DIR" EXIT
 
 # Spinner implementation
