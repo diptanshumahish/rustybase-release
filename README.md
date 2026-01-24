@@ -3,15 +3,12 @@
 <div align="center">
 
 ```text
-░█████████                           ░██               ░██
-░██     ░██                          ░██               ░██
-░██     ░██ ░██    ░██  ░███████  ░████████ ░██    ░██ ░████████   ░██████    ░███████   ░███████
-░█████████  ░██    ░██ ░██           ░██    ░██    ░██ ░██    ░██       ░██  ░██        ░██    ░██
-░██   ░██   ░██    ░██  ░███████     ░██    ░██    ░██ ░██    ░██  ░███████   ░███████  ░█████████
-░██    ░██  ░██   ░███        ░██    ░██    ░██   ░███ ░███   ░██ ░██   ░██         ░██ ░██
-░██     ░██  ░█████░██  ░███████      ░████  ░█████░██ ░██░█████   ░█████░██  ░███████   ░███████
-                                                   ░██
-                                             ░███████
+    ____             __       ____
+   / __ \__  _______/ /_  __ / __ )____ _________
+  / /_/ / / / / ___/ __/ / / / __  / __ `/ ___/ _ \
+ / _, _/ /_/ (__  ) /_  / / / /_/ / /_/ (__  )  __/
+/_/ |_|\__,_/____/\__/ /_/ /_____/\__,_/____/\___/
+                      /___/
 ```
 
 **High-performance, proprietary MongoDB-compatible database engine built for speed, reliability, and simplicity.**
@@ -71,7 +68,7 @@ The server will start on `localhost:8080` (default) and is ready to accept conne
 
 RustyBase is more than just a server. Explore our growing list of tools:
 
-- **[RustyBase SDK](https://github.com/diptanshumahish/rustybase-sdk)**: Modern TypeScript/JavaScript SDK for seamless integration.
+- **[RustyBase SDK](https://www.npmjs.com/package/rustybase-sdk)**: Modern TypeScript/JavaScript SDK for seamless integration.
 - **[RustyBase Web UI](https://github.com/diptanshumahish/rustybase-admin)**: A beautiful administrative dashboard to manage your data visually.
 
 ---
