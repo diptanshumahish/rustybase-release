@@ -70,6 +70,37 @@ try {
 
 $DownloadUrl = "$RepoUrl/releases/download/$ReleaseTag/$Target"
 
+# Optimization: Check if latest version is already installed
+$InstallDir = Join-Path $env:ProgramFiles "RustyBase"
+$InstalledExe = Join-Path $InstallDir "rustybase.exe"
+
+if (Test-Path $InstalledExe) {
+    Write-Host "  >> Checking existing installation... " -NoNewline -ForegroundColor Cyan
+    try {
+        # Attempt to get version from existing binary
+        $VersionOutput = & $InstalledExe --version 2>$null
+        # Normalize: 'rustybase 0.1.1' or just '0.1.1'
+        if ($VersionOutput -match "(\d+\.\d+\.\d+)") {
+            $CurrentVersion = $Matches[1]
+            # Release tag might have 'v' prefix, normalize that too
+            $LatestVersionNormalized = $ReleaseTag -replace '^v', ''
+            
+            if ($CurrentVersion -eq $LatestVersionNormalized) {
+                Write-Host "[v] Up to date ($ReleaseTag)" -ForegroundColor Green
+                Write-Host "`n  >> Success: RustyBase is already at the latest version ($ReleaseTag)." -ForegroundColor White
+                Write-Host "  >> Execute 'rustybase init' to configure your instance.`n" -ForegroundColor Cyan
+                exit 0
+            } else {
+                Write-Host "[!] Update available ($CurrentVersion -> $LatestVersionNormalized)" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "[!] Could not determine version." -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "[!] Error checking version." -ForegroundColor Yellow
+    }
+}
+
 # Temporary directory for installation assets
 $TempDir = Join-Path $env:TEMP ("rustybase-install-" + [Guid]::NewGuid().ToString().Substring(0,8))
 New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
