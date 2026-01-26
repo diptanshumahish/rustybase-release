@@ -3,6 +3,9 @@
 
 $ErrorActionPreference = "Stop"
 
+# Fix terminal encoding to ensure text appears correctly
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 # Force TLS 1.2 for older PowerShell 5.1 environments
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -23,28 +26,54 @@ function Print-Banner {
     Write-Host " "
 }
 
-Print-Banner
-Write-Host "  >> Initiating RustyBase installation sequence..." -ForegroundColor White
-
-# Check for Administrator privileges
-if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    if ($PSCommandPath) {
-        Write-Host "  [!] Administrative privileges required. Attempting to elevate..." -ForegroundColor Yellow
-        $Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-        try {
-            Start-Process powershell.exe -Verb RunAs -ArgumentList $Arguments
-            exit
-        } catch {
-            Write-Host "  [x] Failed to elevate. Please run PowerShell as Administrator." -ForegroundColor Red
-            exit 1
-        }
-    } else {
-        Write-Host "  [x] Error: Administrative privileges required. Please run this script in an Elevated PowerShell session." -ForegroundColor Red
-        exit 1
+function Show-Success {
+    param($InstallPath)
+    Write-Host "`n┌───────────────────────────────────────────────────────────┐" -ForegroundColor Cyan
+    Write-Host "│                                                           │" -ForegroundColor Cyan
+    Write-Host "│           INSTALLATION COMPLETE : RUSTYBASE               │" -ForegroundColor Cyan
+    Write-Host "└───────────────────────────────────────────────────────────┘" -ForegroundColor Cyan
+    Write-Host "`n  >> System operational. Server engine is now local." -ForegroundColor White
+    Write-Host "  >> Executable located at: $InstallPath" -ForegroundColor Gray
+    Write-Host "  >> Execute 'rustybase init' to configure your instance.`n" -ForegroundColor Cyan
+    
+    if ($args[0] -ne "NoPause") {
+        Write-Host "Press any key to close this window..."
+        [void][Console]::ReadKey($true)
     }
 }
 
-# Detect Architecture
+Print-Banner
+Write-Host "  >> Initiating RustyBase installation sequence..." -ForegroundColor White
+
+# 1. Handle Admin Elevation or User-Local Fallback
+$IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (-not $IsAdmin) {
+    Write-Host "  [!] Not running as Administrator." -ForegroundColor Yellow
+    $Choice = Read-Host "  >> Would you like to attempt elevation? (Y/n)"
+    if ($Choice -ne "n") {
+        if ($PSCommandPath) {
+            Write-Host "  >> Attempting to elevate..." -ForegroundColor Cyan
+            try {
+                Start-Process powershell.exe -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+                exit
+            } catch {
+                Write-Host "  [!] Elevation failed or rejected. Switching to user-local installation..." -ForegroundColor Yellow
+            }
+        }
+    } else {
+        Write-Host "  >> Continuing with user-local installation..." -ForegroundColor Cyan
+    }
+}
+
+# 2. Determine Installation Directory
+if ($IsAdmin) {
+    $InstallDir = Join-Path $env:ProgramFiles "RustyBase"
+} else {
+    $InstallDir = Join-Path $HOME ".rustybase\bin"
+}
+
+# 3. Detect Architecture
 $Arch = $env:PROCESSOR_ARCHITECTURE
 if ($Arch -eq "AMD64") {
     $TargetArch = "x86_64"
@@ -57,7 +86,7 @@ if ($Arch -eq "AMD64") {
 
 $Target = "rustybase-$TargetArch-pc-windows-msvc.exe"
 
-# Fetch latest release tag
+# 4. Fetch latest release tag
 Write-Host "  >> Searching for latest release metadata... " -NoNewline -ForegroundColor Cyan
 try {
     $Release = Invoke-RestMethod -Uri $LatestReleaseApi
@@ -70,92 +99,70 @@ try {
 
 $DownloadUrl = "$RepoUrl/releases/download/$ReleaseTag/$Target"
 
-# Optimization: Check if latest version is already installed
-$InstallDir = Join-Path $env:ProgramFiles "RustyBase"
+# 5. Version Check Optimization
 $InstalledExe = Join-Path $InstallDir "rustybase.exe"
-
 if (Test-Path $InstalledExe) {
     Write-Host "  >> Checking existing installation... " -NoNewline -ForegroundColor Cyan
     try {
-        # Attempt to get version from existing binary
         $VersionOutput = & $InstalledExe --version 2>$null
-        # Normalize: 'rustybase 0.1.1' or just '0.1.1'
         if ($VersionOutput -match "(\d+\.\d+\.\d+)") {
             $CurrentVersion = $Matches[1]
-            # Release tag might have 'v' prefix, normalize that too
             $LatestVersionNormalized = $ReleaseTag -replace '^v', ''
-            
             if ($CurrentVersion -eq $LatestVersionNormalized) {
                 Write-Host "[v] Up to date ($ReleaseTag)" -ForegroundColor Green
-                Write-Host "`n  >> Success: RustyBase is already at the latest version ($ReleaseTag)." -ForegroundColor White
-                Write-Host "  >> Execute 'rustybase init' to configure your instance.`n" -ForegroundColor Cyan
+                Show-Success $InstalledExe "NoPause"
                 exit 0
-            } else {
-                Write-Host "[!] Update available ($CurrentVersion -> $LatestVersionNormalized)" -ForegroundColor Yellow
             }
+            Write-Host "[!] Update available ($CurrentVersion -> $LatestVersionNormalized)" -ForegroundColor Yellow
         } else {
-            Write-Host "[!] Could not determine version." -ForegroundColor Yellow
+            Write-Host "[!] Unknown version." -ForegroundColor Yellow
         }
     } catch {
         Write-Host "[!] Error checking version." -ForegroundColor Yellow
     }
 }
 
-# Temporary directory for installation assets
+# 6. Download and Install
 $TempDir = Join-Path $env:TEMP ("rustybase-install-" + [Guid]::NewGuid().ToString().Substring(0,8))
 New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
 
 try {
     Write-Host "  >> Pulling binary from production registry..." -ForegroundColor Cyan
     $DestPath = Join-Path $TempDir "rustybase.exe"
-    
-    # Disable progress bar for faster download in PS 5.1
     $ProgressPreference = 'SilentlyContinue'
     Invoke-WebRequest -Uri $DownloadUrl -OutFile $DestPath -ErrorAction Stop
     $ProgressPreference = 'Continue'
-    
-    # Verify file size (should be > 1MB)
-    $FileSize = (Get-Item $DestPath).Length
-    if ($FileSize -lt 1MB) {
-        throw "Downloaded file is too small ($FileSize bytes). This usually means an error page was downloaded instead of the binary."
-    }
 
-    # Install binary
-    $InstallDir = Join-Path $env:ProgramFiles "RustyBase"
     Write-Host "  >> Deploying binary to $InstallDir... " -NoNewline -ForegroundColor Cyan
-
     if (-not (Test-Path $InstallDir)) {
         New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
     }
+    Copy-Item -Path $DestPath -Destination (Join-Path $InstallDir "rustybase.exe") -Force
+    Write-Host "[v]" -ForegroundColor Green
 
+    # 7. Robust PATH Management
+    Write-Host "  >> Updating environment variables... " -NoNewline -ForegroundColor Cyan
     try {
-        Copy-Item -Path $DestPath -Destination (Join-Path $InstallDir "rustybase.exe") -Force
+        $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
+        if ($UserPath -notlike "*$InstallDir*") {
+            $NewPath = "$UserPath;$InstallDir".Replace(";;", ";")
+            [Environment]::SetEnvironmentVariable("Path", $NewPath, "User")
+            # Update current process too
+            $env:Path = "$env:Path;$InstallDir".Replace(";;", ";")
+        }
         Write-Host "[v]" -ForegroundColor Green
     } catch {
-        Write-Host "`n  [!] Permission denied. Please run this script as Administrator." -ForegroundColor Yellow
-        exit 1
+        Write-Host "[!]" -ForegroundColor Yellow
+        Write-Host "`n  [!] Could not update PATH automatically. Please add this directory manually:" -ForegroundColor Yellow
+        Write-Host "      $InstallDir" -ForegroundColor White
     }
 
-    # Add to PATH if not present
-    $UserPath = [Environment]::GetEnvironmentVariable("Path", "User")
-    if ($UserPath -notlike "*$InstallDir*") {
-        Write-Host "  >> Adding $InstallDir to User PATH..." -ForegroundColor Cyan
-        $NewPath = "$UserPath;$InstallDir"
-        [Environment]::SetEnvironmentVariable("Path", $NewPath, "User")
-        # Update current session path
-        $env:Path = "$env:Path;$InstallDir"
-    }
+    Show-Success $InstalledExe
 
-    Write-Host "`n┌───────────────────────────────────────────────────────────┐" -ForegroundColor Cyan
-    Write-Host "│                                                           │" -ForegroundColor Cyan
-    Write-Host "│           INSTALLATION COMPLETE : RUSTYBASE               │" -ForegroundColor Cyan
-    Write-Host "└───────────────────────────────────────────────────────────┘" -ForegroundColor Cyan
-    Write-Host "`n  >> System operational. Server engine is now local." -ForegroundColor White
-    Write-Host "  >> Execute 'rustybase init' to configure your instance.`n" -ForegroundColor Cyan
-
+} catch {
+    Write-Host "`n  [x] Installation failed: $($_.Exception.Message)" -ForegroundColor Red
 } finally {
     if (Test-Path $TempDir) {
         Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
-
